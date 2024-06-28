@@ -23,7 +23,7 @@ class WaterStriderOptimization:
         
         # Initialize population and velocities
         self.population = self.initialize_positions()
-        self.velocities = np.random.uniform(-1, 1, (pop_size, dim))
+        self.velocities = np.random.uniform(-1, 1, (pop_size, dim//2))
         self.personal_best_positions = np.copy(self.population)
         self.personal_best_scores = np.full(pop_size, np.inf)
         self.global_best_position = None
@@ -32,8 +32,9 @@ class WaterStriderOptimization:
     def initialize_positions(self):
         upper = self.bounds[1]
         lower = self.bounds[0]
-        R = np.random.uniform(0, 1, (self.pop_size, self.dim))
-        return lower + R * (upper - lower)
+        R = np.random.uniform(0, 1, (self.pop_size, self.dim//2))
+        positions = lower + R * (upper - lower)
+        return np.hstack([positions, positions[:, ::-1]])
 
     def fitness(self, coeffs):
         num_points = 128
@@ -62,14 +63,14 @@ class WaterStriderOptimization:
     
     def update_velocity(self, i):
         inertia = self.inertia_weight * self.velocities[i]
-        cognitive = self.cognitive_coeff * np.random.uniform(0, 1, self.dim) * (self.personal_best_positions[i] - self.population[i])
-        social = self.social_coeff * np.random.uniform(0, 1, self.dim) * (self.global_best_position - self.population[i])
+        cognitive = self.cognitive_coeff * np.random.uniform(0, 1, self.dim//2) * (self.personal_best_positions[i][:self.dim//2] - self.population[i][:self.dim//2])
+        social = self.social_coeff * np.random.uniform(0, 1, self.dim//2) * (self.global_best_position[:self.dim//2] - self.population[i][:self.dim//2])
         self.velocities[i] = inertia + cognitive + social
     
     def update_position(self, i):
-        self.population[i] += self.velocities[i]
-        # Boundary check
-        self.population[i] = np.clip(self.population[i], self.bounds[0], self.bounds[1])
+        self.population[i][:self.dim//2] += self.velocities[i]
+        self.population[i][:self.dim//2] = np.clip(self.population[i][:self.dim//2], self.bounds[0], self.bounds[1])
+        self.population[i][self.dim//2:] = self.population[i][:self.dim//2][::-1]
     
     def establish_territories(self):
         territories = []
@@ -92,13 +93,14 @@ class WaterStriderOptimization:
         
         for i in range(len(territory)):
             if np.random.rand() < self.ar:  # Attraction response
-                Q = np.random.uniform(-1, 1, self.dim)
-                territory[i] += Q * np.random.uniform(0, 1)
+                Q = np.random.uniform(-1, 1, self.dim//2)
+                territory[i][:self.dim//2] += Q * np.random.uniform(0, 1)
             else:  # Repulsion response
-                Q = np.random.uniform(-1, 1, self.dim)
-                territory[i] += Q * (1 + np.random.uniform(0, 1))
+                Q = np.random.uniform(-1, 1, self.dim//2)
+                territory[i][:self.dim//2] += Q * (1 + np.random.uniform(0, 1))
             
-            territory[i] = np.clip(territory[i], self.bounds[0], self.bounds[1])  # Boundary check
+            territory[i][:self.dim//2] = np.clip(territory[i][:self.dim//2], self.bounds[0], self.bounds[1])  # Boundary check
+            territory[i][self.dim//2:] = territory[i][:self.dim//2][::-1]
         return territory
 
     def feeding_process(self, territory):
@@ -107,26 +109,28 @@ class WaterStriderOptimization:
             current_fitness = self.fitness(strider)
             if self.global_best_position is not None:
                 if current_fitness > self.global_best_score:  # Moves towards food
-                    new_position = strider + 2 * np.random.uniform(0, 1) * (self.global_best_position - strider)
+                    new_position = strider[:self.dim//2] + 2 * np.random.uniform(0, 1) * (self.global_best_position[:self.dim//2] - strider[:self.dim//2])
                 else:  # Moves towards optimal foraging-habitat females
-                    new_position = strider + 2 * np.random.uniform(0, 1) * (self.global_best_position - strider) * (1 + np.random.uniform(0, 1))
+                    new_position = strider[:self.dim//2] + 2 * np.random.uniform(0, 1) * (self.global_best_position[:self.dim//2] - strider[:self.dim//2]) * (1 + np.random.uniform(0, 1))
                 new_position = np.clip(new_position, self.bounds[0], self.bounds[1])  # Boundary check
-                new_territory.append(new_position)
+                new_strider = np.hstack([new_position, new_position[::-1]])
+                new_territory.append(new_strider)
             else:
                 new_territory.append(strider)
         return new_territory
 
     def death_and_succession(self, territory):
-        min_position = np.min(territory, axis=0)
-        max_position = np.max(territory, axis=0)
+        min_position = np.min(territory, axis=0)[:self.dim//2]
+        max_position = np.max(territory, axis=0)[:self.dim//2]
         new_territory = []
         for strider in territory:
             current_fitness = self.fitness(strider)
             if current_fitness > self.global_best_score:  # Considered dead
-                R = np.random.uniform(0, 1, self.dim)
+                R = np.random.uniform(0, 1, self.dim//2)
                 new_position = min_position + 2 * R * (max_position - min_position)
                 new_position = np.clip(new_position, self.bounds[0], self.bounds[1])  # Boundary check
-                new_territory.append(new_position)
+                new_strider = np.hstack([new_position, new_position[::-1]])
+                new_territory.append(new_strider)
             else:
                 new_territory.append(strider)
         return new_territory

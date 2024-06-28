@@ -1,0 +1,57 @@
+Iteration 1/100, Global Best Score: 2.89196056830086
+Iteration 2/100, Global Best Score: 2.3023475615344013
+Iteration 3/100, Global Best Score: 2.268001390774206
+Iteration 4/100, Global Best Score: 1.9998044747476866
+Iteration 5/100, Global Best Score: 1.8857847960342398
+Iteration 6/100, Global Best Score: 1.864917096441013
+Iteration 7/100, Global Best Score: 1.3419644953915206
+Iteration 8/100, Global Best Score: 1.3419644953915206
+Iteration 9/100, Global Best Score: 1.0384978469918948
+Iteration 10/100, Global Best Score: 1.0384978469918948
+Iteration 11/100, Global Best Score: 0.9261667882502875
+Iteration 12/100, Global Best Score: 0.9261667882502875
+Iteration 13/100, Global Best Score: 0.9261667882502875
+Iteration 14/100, Global Best Score: 0.9261667882502875
+Iteration 15/100, Global Best Score: 0.9226080126326792
+Iteration 16/100, Global Best Score: 0.9226080126326792
+Iteration 17/100, Global Best Score: 0.9226080126326792
+Iteration 18/100, Global Best Score: 0.9226080126326792
+Iteration 19/100, Global Best Score: 0.9226080126326792
+Iteration 20/100, Global Best Score: 0.9101602748201278
+Iteration 21/100, Global Best Score: 0.9101602748201278
+Iteration 22/100, Global Best Score: 0.9101602748201278
+Iteration 23/100, Global Best Score: 0.9101602748201278
+Iteration 24/100, Global Best Score: 0.9101602748201278
+Iteration 25/100, Global Best Score: 0.9101602748201278
+Iteration 26/100, Global Best Score: 0.9101602748201278
+Iteration 27/100, Global Best Score: 0.9101602748201278
+Iteration 28/100, Global Best Score: 0.9044519742980639
+Iteration 29/100, Global Best Score: 0.9044519742980639
+Iteration 30/100, Global Best Score: 0.9044519742980639
+Iteration 31/100, Global Best Score: 0.9027889549567862
+Iteration 32/100, Global Best Score: 0.9027889549567862
+Iteration 33/100, Global Best Score: 0.9027889549567862
+Iteration 34/100, Global Best Score: 0.9027889549567862
+Iteration 35/100, Global Best Score: 0.9002113044446856
+Iteration 36/100, Global Best Score: 0.8917893426718755
+Iteration 37/100, Global Best Score: 0.8917893426718755
+Iteration 38/100, Global Best Score: 0.8917893426718755
+Iteration 39/100, Global Best Score: 0.8840021505716764
+Iteration 40/100, Global Best Score: 0.8840021505716764
+Iteration 41/100, Global Best Score: 0.8840021505716764
+Iteration 42/100, Global Best Score: 0.8804124258015492
+Iteration 43/100, Global Best Score: 0.8804124258015492
+Iteration 44/100, Global Best Score: 0.8804124258015492
+Iteration 45/100, Global Best Score: 0.8804113341146271
+Iteration 46/100, Global Best Score: 0.8804113341146271
+Iteration 47/100, Global Best Score: 0.8691852866431244
+Iteration 48/100, Global Best Score: 0.8691852866431244
+Iteration 49/100, Global Best Score: 0.8691852866431244
+Iteration 50/100, Global Best Score: 0.8679715312639222
+Iteration 51/100, Global Best Score: 0.8679715312639222
+Iteration 52/100, Global Best Score: 0.8679715312639222
+Convergence achieved.
+Best FIR filter coefficients found: [ 0.00608193  0.07182639  0.04653993 -0.08222666 -0.06418802 -0.04621096
+  0.12857742 -0.01045943 -0.27324609 -0.48497175 -0.48497175 -0.27324609
+ -0.01045943  0.12857742 -0.04621096 -0.06418802 -0.08222666  0.04653993
+  0.07182639  0.00608193]
