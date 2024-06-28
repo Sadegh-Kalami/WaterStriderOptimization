@@ -2,7 +2,7 @@ import numpy as np
 from scipy.signal import freqz
 
 class WaterStriderOptimization:
-    def __init__(self, pop_size, dim, max_iter, inertia_weight, cognitive_coeff, social_coeff, bounds, omega_pass, omega_stop, alpha, tau, W, delta_pass, delta_stop):
+    def __init__(self, pop_size, dim, max_iter, inertia_weight, cognitive_coeff, social_coeff, bounds, omega_pass, omega_stop, alpha, tau, W, delta_pass, delta_stop, nte, ar):
         self.pop_size = pop_size
         self.dim = dim
         self.max_iter = max_iter
@@ -17,6 +17,8 @@ class WaterStriderOptimization:
         self.W = W
         self.delta_pass = delta_pass
         self.delta_stop = delta_stop
+        self.nte = nte  # Number of territories
+        self.ar = ar  # Attraction response probability
         
         # Initialize population and velocities
         self.population = self.initialize_positions()
@@ -30,7 +32,7 @@ class WaterStriderOptimization:
         upper = self.bounds[1]
         lower = self.bounds[0]
         R = np.random.uniform(0, 1, (self.pop_size, self.dim))
-        return upper + R * (upper - lower)
+        return lower + R * (upper - lower)
 
     def fitness(self, coeffs):
         num_points = 128
@@ -68,20 +70,49 @@ class WaterStriderOptimization:
         # Boundary check
         self.population[i] = np.clip(self.population[i], self.bounds[0], self.bounds[1])
     
+    def establish_territories(self):
+        territories = []
+        territory_size = self.pop_size // self.nte
+        for i in range(self.nte):
+            start = i * territory_size
+            end = (i + 1) * territory_size if i != self.nte - 1 else self.pop_size
+            territory = self.population[start:end]
+            territories.append(territory)
+        return territories
+    
+    def mating_process(self, territory):
+        best_fitness = np.inf
+        keystone = None
+        for i in range(len(territory)):
+            fitness = self.fitness(territory[i])
+            if fitness < best_fitness:
+                best_fitness = fitness
+                keystone = territory[i]
+        
+        for i in range(len(territory)):
+            if np.random.rand() < self.ar:  # Attraction response
+                Q = np.random.uniform(-1, 1, self.dim)
+                territory[i] += Q * np.random.uniform(0, 1)
+            else:  # Repulsion response
+                Q = np.random.uniform(-1, 1, self.dim)
+                territory[i] += Q * (1 + np.random.uniform(0, 1))
+            
+            territory[i] = np.clip(territory[i], self.bounds[0], self.bounds[1])  # Boundary check
+        return territory
+
     def optimize(self):
         for iteration in range(self.max_iter):
-            for i in range(self.pop_size):
-                fitness = self.fitness(self.population[i])
-                if fitness < self.personal_best_scores[i]:
-                    self.personal_best_scores[i] = fitness
-                    self.personal_best_positions[i] = self.population[i]
-                if fitness < self.global_best_score:
-                    self.global_best_score = fitness
-                    self.global_best_position = self.population[i]
-            
-            for i in range(self.pop_size):
-                self.update_velocity(i)
-                self.update_position(i)
+            territories = self.establish_territories()
+            for idx, territory in enumerate(territories):
+                territory = self.mating_process(territory)
+                for i in range(len(territory)):
+                    fitness = self.fitness(territory[i])
+                    if fitness < self.personal_best_scores[i]:
+                        self.personal_best_scores[i] = fitness
+                        self.personal_best_positions[i] = territory[i]
+                    if fitness < self.global_best_score:
+                        self.global_best_score = fitness
+                        self.global_best_position = territory[i]
             
             print(f"Iteration {iteration+1}/{self.max_iter}, Global Best Score: {self.global_best_score}")
         
@@ -102,8 +133,10 @@ tau = 10
 W = lambda omega: 1  # Uniform weighting function as an example
 delta_pass = 0.01  # Example pass-band ripple
 delta_stop = 0.01  # Example stop-band ripple
+nte = 5  # Number of territories
+ar = 0.7  # Attraction response probability
 
-wso = WaterStriderOptimization(pop_size, dim, max_iter, inertia_weight, cognitive_coeff, social_coeff, bounds, omega_pass, omega_stop, alpha, tau, W, delta_pass, delta_stop)
+wso = WaterStriderOptimization(pop_size, dim, max_iter, inertia_weight, cognitive_coeff, social_coeff, bounds, omega_pass, omega_stop, alpha, tau, W, delta_pass, delta_stop, nte, ar)
 best_coeffs = wso.optimize()
 
 print("Best FIR filter coefficients found:", best_coeffs)
