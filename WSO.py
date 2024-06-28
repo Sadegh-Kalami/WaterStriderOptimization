@@ -115,12 +115,28 @@ class WaterStriderOptimization:
                 new_territory.append(strider)
         return new_territory
 
+    def death_and_succession(self, territory):
+        min_position = np.min(territory, axis=0)
+        max_position = np.max(territory, axis=0)
+        new_territory = []
+        for strider in territory:
+            current_fitness = self.fitness(strider)
+            if current_fitness > self.global_best_score:  # Considered dead
+                R = np.random.uniform(0, 1, self.dim)
+                new_position = min_position + 2 * R * (max_position - min_position)
+                new_position = np.clip(new_position, self.bounds[0], self.bounds[1])  # Boundary check
+                new_territory.append(new_position)
+            else:
+                new_territory.append(strider)
+        return new_territory
+
     def optimize(self):
         for iteration in range(self.max_iter):
             territories = self.establish_territories()
             for idx, territory in enumerate(territories):
                 territory = self.mating_process(territory)
                 territory = self.feeding_process(territory)
+                territory = self.death_and_succession(territory)
                 for i in range(len(territory)):
                     fitness = self.fitness(territory[i])
                     if fitness < self.personal_best_scores[i]:
