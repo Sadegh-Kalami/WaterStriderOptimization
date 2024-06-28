@@ -147,7 +147,7 @@ class WaterStriderOptimization:
                         self.global_best_position = territory[i]
             
             print(f"Iteration {iteration+1}/{self.max_iter}, Global Best Score: {self.global_best_score}")
-            if iteration > 10 and abs(self.global_best_score - previous_global_best_score) < 1e-9:
+            if iteration > 50 and abs(self.global_best_score - previous_global_best_score) < 1e-9:
                 print("Convergence achieved.")
                 break
             previous_global_best_score = self.global_best_score
@@ -155,15 +155,15 @@ class WaterStriderOptimization:
         return self.global_best_position
 
 # Example usage
-pop_size = 30
-dim = 20  # Number of coefficients in the FIR filter
+pop_size = 50
+dim = 21  # Number of coefficients in the FIR filter
 max_iter = 100
 inertia_weight = 0.5
 cognitive_coeff = 1.5
 social_coeff = 1.5
 bounds = (-1, 1)
-omega_pass = 0.3
-omega_stop = 0.4
+omega_pass = 0.44
+omega_stop = 0.55
 alpha = 0
 tau = 10
 W = lambda omega: 1  # Uniform weighting function as an example
@@ -176,3 +176,5 @@ wso = WaterStriderOptimization(pop_size, dim, max_iter, inertia_weight, cognitiv
 best_coeffs = wso.optimize()
 
 print("Best FIR filter coefficients found:", best_coeffs)
+# pasokh ferekansi filter 
+#social_coeff
