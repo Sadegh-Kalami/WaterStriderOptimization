@@ -100,11 +100,27 @@ class WaterStriderOptimization:
             territory[i] = np.clip(territory[i], self.bounds[0], self.bounds[1])  # Boundary check
         return territory
 
+    def feeding_process(self, territory):
+        new_territory = []
+        for strider in territory:
+            current_fitness = self.fitness(strider)
+            if self.global_best_position is not None:
+                if current_fitness > self.global_best_score:  # Moves towards food
+                    new_position = strider + 2 * np.random.uniform(0, 1) * (self.global_best_position - strider)
+                else:  # Moves towards optimal foraging-habitat females
+                    new_position = strider + 2 * np.random.uniform(0, 1) * (self.global_best_position - strider) * (1 + np.random.uniform(0, 1))
+                new_position = np.clip(new_position, self.bounds[0], self.bounds[1])  # Boundary check
+                new_territory.append(new_position)
+            else:
+                new_territory.append(strider)
+        return new_territory
+
     def optimize(self):
         for iteration in range(self.max_iter):
             territories = self.establish_territories()
             for idx, territory in enumerate(territories):
                 territory = self.mating_process(territory)
+                territory = self.feeding_process(territory)
                 for i in range(len(territory)):
                     fitness = self.fitness(territory[i])
                     if fitness < self.personal_best_scores[i]:
