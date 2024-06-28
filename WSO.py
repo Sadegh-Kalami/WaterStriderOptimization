@@ -2,7 +2,7 @@ import numpy as np
 from scipy.signal import freqz
 
 class WaterStriderOptimization:
-    def __init__(self, pop_size, dim, max_iter, inertia_weight, cognitive_coeff, social_coeff, bounds, omega_pass, omega_stop, alpha, tau, W):
+    def __init__(self, pop_size, dim, max_iter, inertia_weight, cognitive_coeff, social_coeff, bounds, omega_pass, omega_stop, alpha, tau, W, delta_pass, delta_stop):
         self.pop_size = pop_size
         self.dim = dim
         self.max_iter = max_iter
@@ -15,6 +15,8 @@ class WaterStriderOptimization:
         self.alpha = alpha
         self.tau = tau
         self.W = W
+        self.delta_pass = delta_pass
+        self.delta_stop = delta_stop
         
         # Initialize population and velocities
         self.population = np.random.uniform(bounds[0], bounds[1], (pop_size, dim))
@@ -25,11 +27,29 @@ class WaterStriderOptimization:
         self.global_best_score = np.inf
 
     def fitness(self, coeffs):
-        # Example fitness function: minimize the error between desired and actual frequency response
-        desired = np.ones(128)
-        _, response = freqz(coeffs, worN=128)
-        error = np.mean((np.abs(response) - desired) ** 2)
-        return error
+        num_points = 128
+        num_pass = int(self.omega_pass * num_points)
+        num_stop = num_points - num_pass
+        desired_response = np.concatenate([
+            np.ones(num_pass),
+            np.zeros(num_stop)
+        ])
+        
+        # Actual frequency response
+        _, actual_response = freqz(coeffs, worN=num_points)
+        
+        # Ensure actual_response has the same length as desired_response
+        actual_response = np.abs(actual_response)
+        
+        # Calculate the error function
+        error = self.W(np.linspace(0, 1, num_points)) * (actual_response - desired_response)
+        
+        # Parks-McClellan error function
+        error_pass = np.maximum(0, np.abs(error[:num_pass]) - self.delta_pass)
+        error_stop = np.maximum(0, np.abs(error[num_pass:]) - self.delta_stop)
+        error_function = np.max(error_pass) + np.max(error_stop)
+        
+        return error_function
     
     def update_velocity(self, i):
         inertia = self.inertia_weight * self.velocities[i]
@@ -74,8 +94,10 @@ omega_stop = 0.4
 alpha = 0
 tau = 10
 W = lambda omega: 1  # Uniform weighting function as an example
+delta_pass = 0.01  # Example pass-band ripple
+delta_stop = 0.01  # Example stop-band ripple
 
-wso = WaterStriderOptimization(pop_size, dim, max_iter, inertia_weight, cognitive_coeff, social_coeff, bounds, omega_pass, omega_stop, alpha, tau, W)
+wso = WaterStriderOptimization(pop_size, dim, max_iter, inertia_weight, cognitive_coeff, social_coeff, bounds, omega_pass, omega_stop, alpha, tau, W, delta_pass, delta_stop)
 best_coeffs = wso.optimize()
 
 print("Best FIR filter coefficients found:", best_coeffs)
