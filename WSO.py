@@ -147,6 +147,10 @@ class WaterStriderOptimization:
                         self.global_best_position = territory[i]
             
             print(f"Iteration {iteration+1}/{self.max_iter}, Global Best Score: {self.global_best_score}")
+            if iteration > 10 and abs(self.global_best_score - previous_global_best_score) < 1e-9:
+                print("Convergence achieved.")
+                break
+            previous_global_best_score = self.global_best_score
         
         return self.global_best_position
 
