@@ -171,14 +171,14 @@ class WaterStriderOptimization:
                         self.global_best_position = territory[i]
             
             print(f"Iteration {iteration+1}/{self.max_iter}, Global Best Score: {self.global_best_score}")
-            if iteration > 50 and abs(self.global_best_score - previous_global_best_score) < 1e-6:
+            if iteration > 100 and abs(self.global_best_score - previous_global_best_score) < 1e-6:
                 print("Convergence achieved.")
                 break
             previous_global_best_score = self.global_best_score
         
         return self.global_best_position
 
-    def plot_frequency_response(self, coeffs):
+    def plot_frequency_response(self, coeffs, ax=None):
         """
         Plots the frequency response of the FIR filter defined by the coefficients.
         """
@@ -189,15 +189,43 @@ class WaterStriderOptimization:
         h_mag = np.abs(h)
 
         # Create the plot
-        plt.figure(figsize=(10, 5))
-        plt.plot(w, h_mag, label='Frequency Response')
-        plt.title('Frequency Response of FIR Filter')
-        plt.xlabel('Normalized Frequency (×π rad/sample)')
-        plt.ylabel('Magnitude')
-        plt.grid(True)
-        plt.axvline(self.omega_pass, color='r', linestyle='--', label='Passband Edge')
-        plt.axvline(self.omega_stop, color='g', linestyle='--', label='Stopband Edge')
-        plt.legend()
+        if ax is None:
+            plt.figure(figsize=(10, 5))
+            plt.plot(w, h_mag, label='Frequency Response')
+            plt.title('Frequency Response of FIR Filter')
+            plt.xlabel('Normalized Frequency (×π rad/sample)')
+            plt.ylabel('Magnitude')
+            plt.grid(True)
+            plt.axvline(self.omega_pass, color='r', linestyle='--', label='Passband Edge')
+            plt.axvline(self.omega_stop, color='g', linestyle='--', label='Stopband Edge')
+            plt.legend()
+            plt.show()
+        else:
+            ax.plot(w, h_mag, label='Frequency Response')
+            ax.set_title('Frequency Response of FIR Filter')
+            ax.set_xlabel('Normalized Frequency (×π rad/sample)')
+            ax.set_ylabel('Magnitude')
+            ax.grid(True)
+            ax.axvline(self.omega_pass, color='r', linestyle='--', label='Passband Edge')
+            ax.axvline(self.omega_stop, color='g', linestyle='--', label='Stopband Edge')
+            ax.legend()
+
+    def run_multiple(self, n_runs):
+        """
+        Run the optimization process multiple times and plot the results in subplots.
+        """
+        fig, axes = plt.subplots(n_runs, 1, figsize=(10, 5 * n_runs))
+        if n_runs == 1:
+            axes = [axes]
+        for i in range(n_runs):
+            self.population = self.initialize_positions(initial_population=None)
+            self.personal_best_positions = np.copy(self.population)
+            self.personal_best_scores = np.full(self.pop_size, np.inf)
+            self.global_best_position = None
+            self.global_best_score = np.inf
+            best_coeffs = self.optimize()
+            self.plot_frequency_response(best_coeffs, ax=axes[i])
+        plt.tight_layout()
         plt.show()
 
 # Example usage
@@ -228,9 +256,4 @@ N1 = [0.0388639813481993, 0.00260088729777498, -0.0302244308396995, -0.018093940
 # Convert N1 to a numpy array and initialize WSO with it
 N1 = np.array(N1)
 wso = WaterStriderOptimization(pop_size, dim, max_iter, inertia_weight, cognitive_coeff, social_coeff, bounds, omega_pass, omega_stop, alpha, tau, W, delta_pass, delta_stop, nte, ar, initial_population=N1)
-best_coeffs = wso.optimize()
-
-print("Best FIR filter coefficients found:", best_coeffs)
-
-# Plot the low-pass filter frequency response of the best filter coefficients
-wso.plot_frequency_response(best_coeffs)
+wso.run_multiple(n_runs=5)
