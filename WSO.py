@@ -20,7 +20,8 @@ class WaterStriderOptimization:
         self.delta_stop = delta_stop
         self.nte = nte  # Number of territories
         self.ar = ar  # Attraction response probability
-        
+        self.convergence_count = 0  # Track consecutive iterations with small changes
+
         # Initialize population and velocities
         self.population = self.initialize_positions(initial_population)
         self.velocities = np.random.uniform(-1, 1, (pop_size, (dim+1)//2))
@@ -155,6 +156,7 @@ class WaterStriderOptimization:
         return new_territory
 
     def optimize(self):
+        self.convergence_count = 0
         for iteration in range(self.max_iter):
             territories = self.establish_territories()
             for idx, territory in enumerate(territories):
@@ -171,11 +173,18 @@ class WaterStriderOptimization:
                         self.global_best_position = territory[i]
             
             print(f"Iteration {iteration+1}/{self.max_iter}, Global Best Score: {self.global_best_score}")
-            if iteration > 100 and abs(self.global_best_score - previous_global_best_score) < 1e-6:
-                print("Convergence achieved.")
+
+            if iteration > 50 and abs(self.global_best_score - previous_global_best_score) < 1e-9:
+                self.convergence_count += 1
+            else:
+                self.convergence_count = 0
+
+            if self.convergence_count >= 5:
+                print("Convergence achieved over 5 consecutive iterations.")
                 break
+
             previous_global_best_score = self.global_best_score
-        
+                
         return self.global_best_position
 
     def plot_frequency_response(self, coeffs, ax=None):
@@ -255,5 +264,5 @@ N1 = [0.0388639813481993, 0.00260088729777498, -0.0302244308396995, -0.018093940
 
 # Convert N1 to a numpy array and initialize WSO with it
 N1 = np.array(N1)
-wso = WaterStriderOptimization(pop_size, dim, max_iter, inertia_weight, cognitive_coeff, social_coeff, bounds, omega_pass, omega_stop, alpha, tau, W, delta_pass, delta_stop, nte, ar, initial_population=N1)
-wso.run_multiple(n_runs=5)
+wso = WaterStriderOptimization(pop_size, dim, max_iter, inertia_weight, cognitive_coeff, social_coeff, bounds, omega_pass, omega_stop, alpha, tau, W, delta_pass, delta_stop, nte, ar, initial_population=None)
+wso.run_multiple(n_runs=10)
