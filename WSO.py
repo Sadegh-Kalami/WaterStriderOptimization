@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.signal import freqz
 
 class WaterStriderOptimization:
@@ -147,12 +148,34 @@ class WaterStriderOptimization:
                         self.global_best_position = territory[i]
             
             print(f"Iteration {iteration+1}/{self.max_iter}, Global Best Score: {self.global_best_score}")
-            if iteration > 50 and abs(self.global_best_score - previous_global_best_score) < 1e-9:
+            if iteration > 50 and abs(self.global_best_score - previous_global_best_score) < 1e-6:
                 print("Convergence achieved.")
                 break
             previous_global_best_score = self.global_best_score
         
         return self.global_best_position
+
+    def plot_frequency_response(self, coeffs):
+        """
+        Plots the frequency response of the FIR filter defined by the coefficients.
+        """
+        # Compute the frequency response
+        w, h = freqz(coeffs, worN=8000)
+        # Normalize frequency to π rad/sample and calculate magnitude
+        w = w / np.pi
+        h_mag = np.abs(h)
+
+        # Create the plot
+        plt.figure(figsize=(10, 5))
+        plt.plot(w, h_mag, label='Frequency Response')
+        plt.title('Frequency Response of FIR Filter')
+        plt.xlabel('Normalized Frequency (×π rad/sample)')
+        plt.ylabel('Magnitude')
+        plt.grid(True)
+        plt.axvline(self.omega_pass, color='r', linestyle='--', label='Passband Edge')
+        plt.axvline(self.omega_stop, color='g', linestyle='--', label='Stopband Edge')
+        plt.legend()
+        plt.show()
 
 # Example usage
 pop_size = 50
@@ -176,5 +199,6 @@ wso = WaterStriderOptimization(pop_size, dim, max_iter, inertia_weight, cognitiv
 best_coeffs = wso.optimize()
 
 print("Best FIR filter coefficients found:", best_coeffs)
-# pasokh ferekansi filter 
-#social_coeff
+
+# Plot the low-pass filter frequency response of the best filter coefficients
+wso.plot_frequency_response(best_coeffs)
