@@ -19,12 +19,18 @@ class WaterStriderOptimization:
         self.delta_stop = delta_stop
         
         # Initialize population and velocities
-        self.population = np.random.uniform(bounds[0], bounds[1], (pop_size, dim))
+        self.population = self.initialize_positions()
         self.velocities = np.random.uniform(-1, 1, (pop_size, dim))
         self.personal_best_positions = np.copy(self.population)
         self.personal_best_scores = np.full(pop_size, np.inf)
         self.global_best_position = None
         self.global_best_score = np.inf
+
+    def initialize_positions(self):
+        upper = self.bounds[1]
+        lower = self.bounds[0]
+        R = np.random.uniform(0, 1, (self.pop_size, self.dim))
+        return upper + R * (upper - lower)
 
     def fitness(self, coeffs):
         num_points = 128
@@ -84,7 +90,7 @@ class WaterStriderOptimization:
 # Example usage
 pop_size = 30
 dim = 20  # Number of coefficients in the FIR filter
-max_iter = 10
+max_iter = 100
 inertia_weight = 0.5
 cognitive_coeff = 1.5
 social_coeff = 1.5
