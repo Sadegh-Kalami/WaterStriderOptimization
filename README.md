@@ -4,14 +4,16 @@ This repository contains an implementation of the Water Strider Optimization (WS
 
 ## Table of Contents
 
-- [Introduction](#introduction)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Parameters](#parameters)
-- [Running the Optimization](#running-the-optimization)
-- [Results](#results)
-- [Contributing](#contributing)
-- [License](#license)
+- [Water Strider Optimization for FIR Filter Coefficient Optimization](#water-strider-optimization-for-fir-filter-coefficient-optimization)
+  - [Table of Contents](#table-of-contents)
+  - [Introduction](#introduction)
+  - [Installation](#installation)
+  - [Usage](#usage)
+  - [Parameters](#parameters)
+  - [Running the Optimization](#running-the-optimization)
+  - [Results](#results)
+  - [Contributing](#contributing)
+  - [License](#license)
 
 ## Introduction
 
@@ -120,4 +122,4 @@ Contributions are welcome! Please fork the repository and submit pull requests.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE.txt) file for details.
