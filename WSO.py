@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.signal import freqz
 
 class WaterStriderOptimization:
-    def __init__(self, pop_size, dim, max_iter, inertia_weight, cognitive_coeff, social_coeff, bounds, omega_pass, omega_stop, alpha, tau, W, delta_pass, delta_stop, nte, ar, initial_population=None):
+    def __init__(self, pop_size, dim, max_iter, inertia_weight, cognitive_coeff, social_coeff, bounds, omega_pass, omega_stop, alpha, tau, W, delta_pass, delta_stop, nte, ar, filter_type='lowpass', initial_population=None):
         self.pop_size = pop_size
         self.dim = dim
         self.max_iter = max_iter
@@ -18,12 +18,12 @@ class WaterStriderOptimization:
         self.W = W
         self.delta_pass = delta_pass
         self.delta_stop = delta_stop
-        self.nte = nte  # Number of territories
-        self.ar = ar  # Attraction response probability
-        self.convergence_count = 0  # Track consecutive iterations with small changes
-        self.previous_global_best_score = np.inf  # Initialize the previous best score
+        self.nte = nte
+        self.ar = ar
+        self.filter_type = filter_type  # Add filter type parameter
+        self.convergence_count = 0
+        self.previous_global_best_score = np.inf
 
-        # Initialize population and velocities
         self.population = self.initialize_positions(initial_population)
         self.velocities = np.random.uniform(-1, 1, (pop_size, (dim + 1) // 2))
         self.personal_best_positions = np.copy(self.population)
@@ -48,19 +48,26 @@ class WaterStriderOptimization:
     def fitness(self, coeffs):
         num_points = 128
         num_pass = int(self.omega_pass * num_points)
-        num_stop = num_points - num_pass
-        desired_response = np.concatenate([
-            np.ones(num_pass),
-            np.zeros(num_stop)
-        ])
-        
+        num_stop = int(self.omega_stop * num_points)
+        desired_response = np.zeros(num_points)
+
+        if self.filter_type == 'lowpass':
+            desired_response[:num_pass] = 1
+        elif self.filter_type == 'highpass':
+            desired_response[num_stop:] = 1
+        elif self.filter_type == 'bandpass':
+            desired_response[num_pass:num_stop] = 1
+        elif self.filter_type == 'bandstop':
+            desired_response[:num_pass] = 1
+            desired_response[num_stop:] = 1
+
         _, actual_response = freqz(coeffs, worN=num_points)
         actual_response = np.abs(actual_response)
         
         error = self.W(np.linspace(0, 1, num_points)) * (actual_response - desired_response)
         
         error_pass = np.maximum(0, np.abs(error[:num_pass]) - self.delta_pass)
-        error_stop = np.maximum(0, np.abs(error[num_pass:]) - self.delta_stop)
+        error_stop = np.maximum(0, np.abs(error[num_stop:]) - self.delta_stop)
         error_function = np.max(error_pass) + np.max(error_stop)
         
         return error_function
@@ -218,7 +225,7 @@ class WaterStriderOptimization:
             self.personal_best_scores = np.full(self.pop_size, np.inf)
             self.global_best_position = None
             self.global_best_score = np.inf
-            self.previous_global_best_score = np.inf  # Reset previous best score for each run
+            self.previous_global_best_score = np.inf
             best_coeffs = self.optimize()
             self.plot_frequency_response(best_coeffs, ax=axes[i])
         plt.tight_layout()
@@ -234,6 +241,16 @@ social_coeff = 1.5
 bounds = (-1, 1)
 omega_pass = 0.44
 omega_stop = 0.55
+# #lowpass
+# omega_pass = 0.44
+# omega_stop = 0.55
+# band+pass+stop
+# omega_pass = 0.35
+# omega_stop = 0.65
+# #highpass
+omega_pass = 0.4
+omega_stop = 0.51
+
 alpha = 0
 tau = 10
 W = lambda omega: 1  # Uniform weighting function as an example
@@ -243,13 +260,17 @@ nte = 5  # Number of territories
 ar = 0.7  # Attraction response probability
 
 # Initial Ideal Filter Coef provided as N1
-N1 = [0.0388639813481993, 0.00260088729777498, -0.0302244308396995, -0.0180939407775842, 0.0356920644947972, 
+Nlowpass = [0.0388639813481993, 0.00260088729777498, -0.0302244308396995, -0.0180939407775842, 0.0356920644947972, 
       0.0393786067312622, -0.0450132314893481, -0.0923298471847741, 0.0471816860342088, 0.311919757687732, 
       0.448804967338731, 0.311919757687732, 0.0471816860342088, -0.0923298471847741, -0.0450132314893481, 
       0.0393786067312622, 0.0356920644947972, -0.0180939407775842, -0.0302244308396995, 0.00260088729777498, 
       0.0388639813481993]
 
+Nbandpass =  [0.198121838804337,-8.71790667529623e-05,-0.117713638701085,-0.000362304145142637,-0.0741235739610571,-0.000798171220967827,0.107100347504947,-0.00119313175650152,-0.306278112103464,-0.00139881848691635,0.269551140201775,-0.00139881848691635,-0.306278112103464,-0.00119313175650152,0.107100347504947,-0.000798171220967827,-0.0741235739610571,-0.000362304145142637,-0.117713638701085,-8.71790667529623e-05,0.198121838804337]
+Nhighpass = [0.186317890363039,0.0464340730363551,-0.0852225118852898,0.0542746298935874,0.0151745959446690,-0.0126856439884851,-0.0798211193342827,0.119499473611657,0.0292566901356156,-0.289826805167671,0.421121186400957,-0.289826805167671,0.0292566901356156,0.119499473611657,-0.0798211193342827,-0.0126856439884851,0.0151745959446690,0.0542746298935874,-0.0852225118852898,0.0464340730363551,0.186317890363039]
+
+Nbandstop = [-0.198121838804334,8.71790667314333e-05,0.117713638701116,0.000362304145089246,0.0741235739611247,0.000798171220874148,-0.107100347504838,0.00119313175637083,0.306278112103605,0.00139881848676322,0.730448859798378,0.00139881848676322,0.306278112103605,0.00119313175637083,-0.107100347504838,0.000798171220874148,0.0741235739611247,0.000362304145089246,0.117713638701116,8.71790667314333e-05,-0.198121838804334]
 # Convert N1 to a numpy array and initialize WSO with it
-N1 = np.array(N1)
-wso = WaterStriderOptimization(pop_size, dim, max_iter, inertia_weight, cognitive_coeff, social_coeff, bounds, omega_pass, omega_stop, alpha, tau, W, delta_pass, delta_stop, nte, ar, initial_population=N1)
+N1 = np.array(Nhighpass)
+wso = WaterStriderOptimization(pop_size, dim, max_iter, inertia_weight, cognitive_coeff, social_coeff, bounds, omega_pass, omega_stop, alpha, tau, W, delta_pass, delta_stop, nte, ar, filter_type='highpass', initial_population=N1)
 wso.run_multiple(n_runs=10)
